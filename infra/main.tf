@@ -384,6 +384,23 @@ resource "azuread_service_principal" "github_actions" {
   owners    = [var.admin_object_id]
 }
 
+# Microsoft Graph service principal, well-known appId in every tenant.
+data "azuread_service_principal" "msgraph" {
+  client_id = "00000003-0000-0000-c000-000000000000"
+}
+
+# CI runs as this service principal in APP-ONLY context (client credentials /
+# OIDC), where Microsoft Graph ignores "ownership" of an application - being
+# listed as an owner only grants rights in DELEGATED (signed-in user)
+# context. App-only calls need an actual Graph API permission instead, so
+# grant the least-privilege one scoped to apps this SP owns (not
+# Application.ReadWrite.All, which would cover the whole tenant).
+resource "azuread_app_role_assignment" "github_actions_manage_owned_apps" {
+  app_role_id         = data.azuread_service_principal.msgraph.app_role_ids["Application.ReadWrite.OwnedBy"]
+  principal_object_id = azuread_service_principal.github_actions.object_id
+  resource_object_id  = data.azuread_service_principal.msgraph.object_id
+}
+
 # Allow the workflow to run from both the main branch and pull_request events.
 resource "azuread_application_federated_identity_credential" "github_actions_main" {
   application_id = azuread_application.github_actions.id

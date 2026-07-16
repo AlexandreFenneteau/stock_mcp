@@ -17,7 +17,8 @@ Minimal, **public** Azure infrastructure for the MCP Stock Management demo. Not 
     - a **delegated permission grant** (admin-consented) so it can call Backend-API on behalf of the signed-in user via On-Behalf-Of (OBO), without interactive consent.
   - `GitHub-Actions-Deploy` — daemon app used only by CI/CD:
     - **no client secret** — federated (OIDC) for `repo:<github_repository>:ref:refs/heads/main`, so GitHub Actions authenticates with a short-lived token,
-    - **Contributor** role assignment scoped to the Resource Group only (not the whole subscription).
+    - **Contributor** role assignment scoped to the Resource Group only (not the whole subscription),
+    - Microsoft Graph **application permission** `Application.ReadWrite.OwnedBy` (app-only, admin-consented) so it can manage `Backend-API`/`Frontend-Angular`/`MCP-Server` via Terraform in CI — being listed as an *owner* of those apps only grants rights in delegated (signed-in user) context, not app-only/service-principal context, so this explicit Graph permission is required in addition to co-ownership.
 - **Static Web App** (Free tier) — hosts the Angular frontend.
 - **Linux App Service Plan** (`B1` by default) + **2 Linux Web Apps** (Python 3.11):
   - Backend API (FastAPI) — CORS restricted to the Static Web App + localhost.
