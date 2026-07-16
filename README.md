@@ -31,6 +31,7 @@ terraform apply "dev.tfplan"
 ```
 
 - `github_repository` **must** match your actual GitHub repo (e.g. `"alexandre/mcp_stock"`) — it scopes the OIDC federated credential so only workflows running from that repo's `main` branch can authenticate as `GitHub-Actions-Deploy`.
+  - **Enterprise Managed User (EMU) orgs**: the OIDC subject claim GitHub sends isn't the plain `owner/repo` you'd expect — it's suffixed with numeric IDs, e.g. `Alex@89245300/stock_mcp@2197128252`. If `azure/login` fails with `AADSTS700213: No matching federated identity record found`, check the actual `subject claim` value logged by the failed workflow run and re-apply Terraform with `-var="github_repository=<that exact value minus the ':ref:refs/heads/main' suffix>"`.
 - Full list of variables/outputs, and troubleshooting for common Azure/Terraform errors, is in [`infra/README.md`](infra/README.md).
 - Keep the terminal open (or re-run `terraform output` later) — you'll need several outputs in the next steps.
 
