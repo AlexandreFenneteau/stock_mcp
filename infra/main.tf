@@ -57,6 +57,19 @@ variable "prefix" {
   default     = "mcpstock"
 }
 
+variable "admin_object_id" {
+  description = <<-EOT
+    Object ID of the human user/group that owns all Entra ID App Registrations
+    (in addition to the GitHub-Actions-Deploy service principal, added
+    automatically). Must be a FIXED value (not derived from
+    data.azuread_client_config.current, which resolves to whoever is running
+    Terraform - your user locally, but the GitHub-Actions-Deploy service
+    principal itself in CI - causing ownership to flip-flop on every apply).
+    Get yours with: az ad signed-in-user show --query id -o tsv
+  EOT
+  type        = string
+}
+
 variable "location" {
   description = "Azure region for the resources"
   type        = string
@@ -116,7 +129,7 @@ locals {
 
 resource "azuread_application" "backend_api" {
   display_name     = "Backend-API"
-  owners           = [data.azuread_client_config.current.object_id]
+  owners           = [var.admin_object_id, azuread_service_principal.github_actions.object_id]
   sign_in_audience = "AzureADMyOrg"
 
   identifier_uris = [local.backend_api_identifier_uri]
@@ -152,7 +165,7 @@ resource "azuread_application" "backend_api" {
 
 resource "azuread_service_principal" "backend_api" {
   client_id = azuread_application.backend_api.client_id
-  owners    = [data.azuread_client_config.current.object_id]
+  owners    = [var.admin_object_id, azuread_service_principal.github_actions.object_id]
 }
 
 ########################################
@@ -162,7 +175,7 @@ resource "azuread_service_principal" "backend_api" {
 
 resource "azuread_application" "frontend_angular" {
   display_name     = "Frontend-Angular"
-  owners           = [data.azuread_client_config.current.object_id]
+  owners           = [var.admin_object_id, azuread_service_principal.github_actions.object_id]
   sign_in_audience = "AzureADMyOrg"
 
   single_page_application {
@@ -184,7 +197,7 @@ resource "azuread_application" "frontend_angular" {
 
 resource "azuread_service_principal" "frontend_angular" {
   client_id = azuread_application.frontend_angular.client_id
-  owners    = [data.azuread_client_config.current.object_id]
+  owners    = [var.admin_object_id, azuread_service_principal.github_actions.object_id]
 }
 
 ########################################
@@ -204,7 +217,7 @@ locals {
 
 resource "azuread_application" "mcp_server" {
   display_name     = "MCP-Server"
-  owners           = [data.azuread_client_config.current.object_id]
+  owners           = [var.admin_object_id, azuread_service_principal.github_actions.object_id]
   sign_in_audience = "AzureADMyOrg"
 
   identifier_uris = [local.mcp_server_identifier_uri]
@@ -253,7 +266,7 @@ resource "azuread_application" "mcp_server" {
 
 resource "azuread_service_principal" "mcp_server" {
   client_id = azuread_application.mcp_server.client_id
-  owners    = [data.azuread_client_config.current.object_id]
+  owners    = [var.admin_object_id, azuread_service_principal.github_actions.object_id]
 }
 
 resource "azuread_application_password" "mcp_server" {
@@ -362,13 +375,13 @@ resource "azurerm_linux_web_app" "mcp_server" {
 
 resource "azuread_application" "github_actions" {
   display_name     = "GitHub-Actions-Deploy"
-  owners           = [data.azuread_client_config.current.object_id]
+  owners           = [var.admin_object_id]
   sign_in_audience = "AzureADMyOrg"
 }
 
 resource "azuread_service_principal" "github_actions" {
   client_id = azuread_application.github_actions.client_id
-  owners    = [data.azuread_client_config.current.object_id]
+  owners    = [var.admin_object_id]
 }
 
 # Allow the workflow to run from both the main branch and pull_request events.

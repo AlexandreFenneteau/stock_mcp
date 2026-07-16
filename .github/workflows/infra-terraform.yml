@@ -35,6 +35,10 @@ env:
   # log line) — NOT necessarily plain "owner/repo". Enterprise Managed User
   # (EMU) orgs append numeric suffixes, e.g. "owner@12345/repo@67890".
   TF_VAR_github_repository: ${{ vars.GH_REPOSITORY_OIDC_SUBJECT }}
+  # Fixed object ID of the human owner of all Entra ID App Registrations
+  # (see the admin_object_id variable in main.tf for why this must be a
+  # stable value, not derived from whoever is running Terraform).
+  TF_VAR_admin_object_id: ${{ vars.ADMIN_OBJECT_ID }}
 
 jobs:
   plan:

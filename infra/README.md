@@ -70,6 +70,7 @@ terraform destroy -var="github_repository=<owner>/<repo>"
 | `app_service_sku`           | `B1`              | SKU for the Linux App Service Plan (`F1` = Free, `B1` = Basic).                                    |
 | `static_web_app_location`   | `eastus2`         | Region for the Static Web App. Azure Static Web Apps are only available in a small set of regions and some may reject new resources — see [Troubleshooting](#troubleshooting). |
 | `github_repository`        | *(required)*      | GitHub repository in `"owner/repo"` form, scopes the OIDC federated credential for `GitHub-Actions-Deploy`. |
+| `admin_object_id`          | *(required)*      | Object ID of the human user/group that co-owns all Entra ID App Registrations alongside `GitHub-Actions-Deploy`. Must be a fixed value (get yours with `az ad signed-in-user show --query id -o tsv`) — never derive it from the identity currently running Terraform, since that differs between your local user and the CI service principal and causes ownership to flip-flop on every apply. |
 
 Override with `-var` or a `*.tfvars` file, e.g.:
 
@@ -117,6 +118,7 @@ The workflows in `.github/workflows/` (`infra-terraform.yml`, `deploy-apps.yml`)
    - `AZURE_STATIC_WEB_APPS_API_TOKEN` = `terraform output -raw static_web_app_api_key`
 3. Repository **variable** (Settings → Secrets and variables → Actions → Variables):
    - `GH_REPOSITORY_OIDC_SUBJECT` — the exact repo identifier GitHub puts in the OIDC token's `subject` claim. For most repos this is `owner/repo`, but **Enterprise Managed User (EMU)** orgs append numeric suffixes (e.g. `owner@12345/repo@67890`). Find the real value by triggering a workflow once and reading the `subject claim` line logged by `azure/login` on failure, then set this variable to match (everything before `:ref:...` or `:environment:...`).
+   - `ADMIN_OBJECT_ID` — same value used for `-var="admin_object_id=..."` locally, so CI keeps ownership of the Entra apps consistent with your local runs instead of overwriting it with the CI service principal's own ID.
 3. Repository **variables** (same page, "Variables" tab):
    - `BACKEND_API_APP_NAME` = `terraform output -raw backend_api_app_name`
    - `MCP_SERVER_APP_NAME` = `terraform output -raw mcp_server_app_name`

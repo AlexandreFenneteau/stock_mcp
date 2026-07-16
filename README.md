@@ -26,12 +26,13 @@ This creates the Resource Group, the 4 Entra ID App Registrations (`Backend-API`
 ```powershell
 cd infra
 terraform init
-terraform plan -out dev.tfplan -var="github_repository=<your-github-org-or-user>/<your-repo-name>"
+terraform plan -out dev.tfplan -var="github_repository=<your-github-org-or-user>/<your-repo-name>" -var="admin_object_id=<your-object-id>"
 terraform apply "dev.tfplan"
 ```
 
 - `github_repository` **must** match your actual GitHub repo (e.g. `"alexandre/mcp_stock"`) — it scopes the OIDC federated credential so only workflows running from that repo's `main` branch can authenticate as `GitHub-Actions-Deploy`.
   - **Enterprise Managed User (EMU) orgs**: the OIDC subject claim GitHub sends isn't the plain `owner/repo` you'd expect — it's suffixed with numeric IDs, e.g. `Alex@89245300/stock_mcp@2197128252`. If `azure/login` fails with `AADSTS700213: No matching federated identity record found`, check the actual `subject claim` value logged by the failed workflow run and re-apply Terraform with `-var="github_repository=<that exact value minus the ':ref:refs/heads/main' suffix>"`.
+- `admin_object_id` **must** be a fixed value — get yours with `az ad signed-in-user show --query id -o tsv`. It's used to co-own the Entra ID App Registrations alongside the `GitHub-Actions-Deploy` service principal; without a fixed value, ownership would flip-flop between your user (local runs) and the CI service principal (CI runs), causing 403 errors.
 - Full list of variables/outputs, and troubleshooting for common Azure/Terraform errors, is in [`infra/README.md`](infra/README.md).
 - Keep the terminal open (or re-run `terraform output` later) — you'll need several outputs in the next steps.
 
@@ -71,6 +72,8 @@ All values below come from `terraform output` (run from `infra/`).
    | --- | --- |
    | `BACKEND_API_APP_NAME` | `terraform output -raw backend_api_app_name` |
    | `MCP_SERVER_APP_NAME` | `terraform output -raw mcp_server_app_name` |
+   | `GH_REPOSITORY_OIDC_SUBJECT` | the exact repo identifier from the OIDC `subject claim` (see note above — may differ from plain `owner/repo` on EMU orgs) |
+   | `ADMIN_OBJECT_ID` | the same value passed as `-var="admin_object_id=..."` above |
 
 The secrets for `TENANT_ID`, `*_CLIENT_ID`, etc. are used by the `deploy-apps.yml` workflow to generate the Angular environment files (`environment.ts`, `environment.prod.ts`) at build time — they are not committed to the repo.
 
@@ -126,7 +129,7 @@ Any push to `main` that touches `backend/`, `mcp-server/`, or `frontend/` re-run
 
 ```powershell
 cd infra
-terraform destroy -var="github_repository=<your-github-org-or-user>/<your-repo-name>"
+terraform destroy -var="github_repository=<your-github-org-or-user>/<your-repo-name>" -var="admin_object_id=<your-object-id>"
 ```
 
 This removes every Azure resource and Entra ID App Registration created in step 2. It does not touch the GitHub repository or its secrets/variables (delete those manually if you want a full cleanup).
