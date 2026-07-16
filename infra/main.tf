@@ -317,6 +317,7 @@ resource "azurerm_linux_web_app" "backend_api" {
     application_stack {
       python_version = "3.11"
     }
+    app_command_line = "bash startup.sh"
     cors {
       allowed_origins = [
         "https://${azurerm_static_web_app.frontend.default_host_name}",
@@ -346,13 +347,14 @@ resource "azurerm_linux_web_app" "mcp_server" {
     application_stack {
       python_version = "3.11"
     }
+    app_command_line = "bash startup.sh"
   }
 
   app_settings = {
     "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
     "TENANT_ID"                      = data.azurerm_client_config.current.tenant_id
-    "MCP_SERVER_CLIENT_ID"           = azuread_application.mcp_server.client_id
-    "MCP_SERVER_CLIENT_SECRET"       = azuread_application_password.mcp_server.value
+    "MCP_CLIENT_ID"                  = azuread_application.mcp_server.client_id
+    "MCP_CLIENT_SECRET"              = azuread_application_password.mcp_server.value
     "MCP_SERVER_BASE_URL"            = "https://${local.mcp_server_hostname}"
     "MCP_SERVER_APP_ID_URI"          = local.mcp_server_identifier_uri
     "BACKEND_API_CLIENT_ID"          = azuread_application.backend_api.client_id

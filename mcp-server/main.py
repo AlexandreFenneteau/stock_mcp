@@ -138,3 +138,8 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 8001)),
     )
+
+# ASGI app for production deployment under gunicorn + uvicorn workers (see
+# startup.sh: `gunicorn main:app -k uvicorn.workers.UvicornWorker ...`).
+# Not used by the `mcp.run(...)` dev entrypoint above.
+app = mcp.http_app(transport="sse")

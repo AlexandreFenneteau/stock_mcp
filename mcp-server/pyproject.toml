@@ -5,6 +5,7 @@ description = "Stock Management MCP Server (SSE transport, secured with Entra ID
 requires-python = ">=3.11"
 dependencies = [
     "fastmcp[azure]>=2.13.0",
+    "gunicorn>=23.0.0",
     "httpx>=0.27.0",
     "python-dotenv>=1.0.0",
     "aiohttp>=3.9.0",
