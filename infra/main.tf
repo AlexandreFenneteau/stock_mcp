@@ -401,6 +401,17 @@ resource "azuread_app_role_assignment" "github_actions_manage_owned_apps" {
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
 }
 
+# Also needed in app-only context (same reasoning as above): managing the
+# MCP-Server's admin-consented delegated permission grant
+# (azuread_service_principal_delegated_permission_grant.mcp_server_access_as_user)
+# reads/writes a Microsoft Graph oauth2PermissionGrants resource, which
+# requires this permission regardless of app ownership.
+resource "azuread_app_role_assignment" "github_actions_manage_permission_grants" {
+  app_role_id         = data.azuread_service_principal.msgraph.app_role_ids["DelegatedPermissionGrant.ReadWrite.All"]
+  principal_object_id = azuread_service_principal.github_actions.object_id
+  resource_object_id  = data.azuread_service_principal.msgraph.object_id
+}
+
 # Allow the workflow to run from both the main branch and pull_request events.
 resource "azuread_application_federated_identity_credential" "github_actions_main" {
   application_id = azuread_application.github_actions.id
