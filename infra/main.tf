@@ -367,6 +367,18 @@ resource "azuread_application_federated_identity_credential" "github_actions_mai
   subject        = "repo:${var.github_repository}:ref:refs/heads/main"
 }
 
+# Jobs that declare `environment: production` (both workflows do) send a
+# different OIDC subject claim — "environment:<name>" instead of
+# "ref:refs/heads/<branch>" — so a separate federated credential is required.
+resource "azuread_application_federated_identity_credential" "github_actions_production_environment" {
+  application_id = azuread_application.github_actions.id
+  display_name   = "github-actions-production-environment"
+  description    = "GitHub Actions deploying from the production environment"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = "repo:${var.github_repository}:environment:production"
+}
+
 # Contributor on the resource group only (not subscription-wide) — least
 # privilege needed to zip-deploy the two Web Apps and the Static Web App.
 resource "azurerm_role_assignment" "github_actions_contributor" {
