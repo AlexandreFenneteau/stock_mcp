@@ -28,7 +28,7 @@ L'application est servie sur http://localhost:4200. Le backend doit tourner en l
 npx ng build --configuration production
 ```
 
-Les fichiers de production remplacent automatiquement `src/environments/environment.ts` par `src/environments/environment.prod.ts` (voir `fileReplacements` dans `angular.json`). Le résultat est généré dans `dist/frontend`.
+`src/environments/environment.ts` n'est pas committé (voir `.gitignore`) et doit être créé localement (copier `environment.ts.example`) avec vos propres valeurs (tenant, client IDs, URL backend). Le pipeline CI (`deploy-apps.yml`) le génère automatiquement à partir des secrets GitHub avant le build. Le résultat est généré dans `dist/frontend`.
 
 ## Structure du projet
 
@@ -40,8 +40,7 @@ src/
     msal.config.ts              Factories MSAL (instance, guard, interceptor) et scopes demandés
     stock.service.ts            Appels HTTP vers l'API (GET /api/stock, POST /api/stock/adjust)
   environments/
-    environment.ts               Config (dev) : tenant, client IDs, URL backend
-    environment.prod.ts          Config (prod)
+    environment.ts               Config (tenant, client IDs, URL backend) - non committé, généré par CI ou copié depuis environment.ts.example
 ```
 
 ## Authentification (Entra ID)

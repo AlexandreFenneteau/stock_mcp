@@ -75,7 +75,7 @@ All values below come from `terraform output` (run from `infra/`).
    | `GH_REPOSITORY_OIDC_SUBJECT` | the exact repo identifier from the OIDC `subject claim` (see note above — may differ from plain `owner/repo` on EMU orgs) |
    | `ADMIN_OBJECT_ID` | the same value passed as `-var="admin_object_id=..."` above |
 
-The secrets for `TENANT_ID`, `*_CLIENT_ID`, etc. are used by the `deploy-apps.yml` workflow to generate the Angular environment files (`environment.ts`, `environment.prod.ts`) at build time — they are not committed to the repo.
+The secrets for `TENANT_ID`, `*_CLIENT_ID`, etc. are used by the `deploy-apps.yml` workflow to generate the Angular environment file (`environment.ts`) at build time — it is not committed to the repo.
 
 No Azure client secret is ever stored in GitHub for deployments — `AZURE_CLIENT_ID` authenticates via OpenID Connect (Workload Identity Federation), matching the federated credential created in step 2.
 

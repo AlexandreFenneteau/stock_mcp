@@ -100,9 +100,9 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Generate environment.prod.ts
+      - name: Generate environment.ts
         run: |
-          cat > src/environments/environment.prod.ts << 'EOF'
+          cat > src/environments/environment.ts << 'EOF'
           export const environment = {
             production: true,
             tenantId: '${{ secrets.TENANT_ID }}',
