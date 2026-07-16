@@ -29,19 +29,36 @@ Minimal, **public** Azure infrastructure for the MCP Stock Management demo. Not 
 - Azure CLI, logged in (`az login`) with rights to create App Registrations in the tenant and resources in the subscription
 - The `Microsoft.Web` resource provider registered on the subscription (see [Troubleshooting](#troubleshooting))
 
+## Remote state
+
+State is stored remotely in Azure Blob Storage (`backend "azurerm"` block in `main.tf`), **not** locally — this lets both your machine and GitHub Actions CI operate on the same state, avoiding CI trying to recreate resources that already exist. Auth uses Azure AD RBAC (`use_azuread_auth = true`, `Storage Blob Data Contributor` role), no storage account keys.
+
+The storage account/container are bootstrapped **once, manually** (outside Terraform, to avoid a chicken-and-egg dependency on the backend itself):
+
+```powershell
+az group create --name rg-tfstate-mcpstock --location francecentral
+az storage account create --name <globally-unique-name> --resource-group rg-tfstate-mcpstock --location francecentral --sku Standard_LRS --allow-blob-public-access false
+az storage container create --name tfstate --account-name <name> --auth-mode login
+
+# Grant yourself and the GitHub-Actions-Deploy service principal access:
+az role assignment create --assignee <your-object-id-or-sp-object-id> --role "Storage Blob Data Contributor" --scope <storage-account-resource-id>
+```
+
+Then update the `backend "azurerm" {}` block in `main.tf` with your storage account name, and run `terraform init` (or `terraform init -migrate-state` if migrating from local state).
+
 ## Usage
 
 ```powershell
 cd infra
 terraform init
-terraform plan -out dev.tfplan
+terraform plan -out dev.tfplan -var="github_repository=<owner>/<repo>"
 terraform apply "dev.tfplan"
 ```
 
 To tear everything down:
 
 ```powershell
-terraform destroy
+terraform destroy -var="github_repository=<owner>/<repo>"
 ```
 
 ## Variables
@@ -98,6 +115,8 @@ The workflows in `.github/workflows/` (`infra-terraform.yml`, `deploy-apps.yml`)
    - `AZURE_TENANT_ID` = `terraform output -raw tenant_id`
    - `AZURE_SUBSCRIPTION_ID` = `terraform output -raw subscription_id`
    - `AZURE_STATIC_WEB_APPS_API_TOKEN` = `terraform output -raw static_web_app_api_key`
+3. Repository **variable** (Settings → Secrets and variables → Actions → Variables):
+   - `GH_REPOSITORY_OIDC_SUBJECT` — the exact repo identifier GitHub puts in the OIDC token's `subject` claim. For most repos this is `owner/repo`, but **Enterprise Managed User (EMU)** orgs append numeric suffixes (e.g. `owner@12345/repo@67890`). Find the real value by triggering a workflow once and reading the `subject claim` line logged by `azure/login` on failure, then set this variable to match (everything before `:ref:...` or `:environment:...`).
 3. Repository **variables** (same page, "Variables" tab):
    - `BACKEND_API_APP_NAME` = `terraform output -raw backend_api_app_name`
    - `MCP_SERVER_APP_NAME` = `terraform output -raw mcp_server_app_name`

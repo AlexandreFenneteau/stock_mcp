@@ -6,6 +6,20 @@
 terraform {
   required_version = ">= 1.6"
 
+  # Remote state, shared between local runs and GitHub Actions CI (so CI
+  # doesn't try to recreate resources that already exist). The storage
+  # account/container are bootstrapped once, manually, outside Terraform
+  # (avoids a chicken-and-egg dependency on the state backend itself).
+  # Auth uses Azure AD (RBAC "Storage Blob Data Contributor"), matching the
+  # OIDC-only / no-secrets approach used everywhere else in this repo.
+  backend "azurerm" {
+    resource_group_name  = "rg-tfstate-mcpstock"
+    storage_account_name = "sttfstatemcpstockatsmi"
+    container_name       = "tfstate"
+    key                  = "mcp-stock.tfstate"
+    use_azuread_auth     = true
+  }
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"

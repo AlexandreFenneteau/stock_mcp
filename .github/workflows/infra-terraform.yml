@@ -30,7 +30,11 @@ env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  TF_VAR_github_repository: ${{ github.repository }}
+  # NOTE: must be the literal value matching the OIDC subject claim GitHub
+  # actually sends (visible in a failed azure/login run's "subject claim"
+  # log line) — NOT necessarily plain "owner/repo". Enterprise Managed User
+  # (EMU) orgs append numeric suffixes, e.g. "owner@12345/repo@67890".
+  TF_VAR_github_repository: ${{ vars.GH_REPOSITORY_OIDC_SUBJECT }}
 
 jobs:
   plan:
