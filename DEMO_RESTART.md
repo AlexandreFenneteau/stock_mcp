@@ -56,20 +56,26 @@ FRONTEND_URL=https://<static-web-app-url>
 AZURE_STATIC_WEB_APPS_API_TOKEN=<from Static Web App deployment credentials>
 ```
 
-## Step 3: Initialize Terraform Remote State (First Time Only)
-
-If the remote state backend doesn't exist:
+## Step 3: Configure Terraform Variables
 
 ```powershell
 cd infra
 
+# Copy the example and fill in your values
+cp terraform.tfvars.example terraform.tfvars
+
+# Edit terraform.tfvars with your actual values:
+# github_repository = "AlexandreFenneteau@52283300/stock_mcp@1302728241"
+# admin_object_id   = "your-azure-object-id"
+```
+
+Then initialize remote state (first time only):
+
+```powershell
 # Bootstrap: Create storage account manually (one-time setup)
 # OR run Terraform with local state first, then migrate
 
 terraform init -backend=false  # Start without backend
-terraform plan -out=demo.tfplan `
-  -var="github_repository=${{ env:GH_REPOSITORY_OIDC_SUBJECT }}" `
-  -var="admin_object_id=${{ env:ADMIN_OBJECT_ID }}"
 
 # After storage account exists, add backend config:
 terraform init -migrate-state  # Migrates to remote backend
@@ -80,10 +86,8 @@ terraform init -migrate-state  # Migrates to remote backend
 ```powershell
 cd infra
 
-# Plan
-terraform plan -out=demo.tfplan `
-  -var="github_repository=AlexandreFenneteau@52283300/stock_mcp@1302728241" `
-  -var="admin_object_id=12345678-1234-1234-1234-123456789012"
+# Plan (automatically uses terraform.tfvars)
+terraform plan -out=demo.tfplan
 
 # Apply
 terraform apply demo.tfplan
@@ -162,12 +166,8 @@ The agent will:
 ```powershell
 cd infra
 
-# Destroy all Azure resources
-terraform destroy \
-  -var="github_repository=AlexandreFenneteau@52283300/stock_mcp@1302728241" \
-  -var="admin_object_id=12345678-1234-1234-1234-123456789012"
-
-# Confirm when prompted
+# Destroy all Azure resources (uses terraform.tfvars automatically)
+terraform destroy
 ```
 
 This removes:

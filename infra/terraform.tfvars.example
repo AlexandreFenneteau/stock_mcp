@@ -1,0 +1,5 @@
+# Copy this file to terraform.tfvars and fill in your values
+# terraform.tfvars is git-ignored (sensitive local values)
+
+github_repository = "AlexandreFenneteau@52xxxxx0/stock_mcp@130xxxxx41"
+admin_object_id   = "12345678-1234-1234-1234-123456789012"
