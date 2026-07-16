@@ -1,0 +1,129 @@
+name: Deploy Apps
+
+# Builds and deploys the three application components (Backend API,
+# MCP Server, Angular Frontend) to the Azure resources already provisioned
+# by the infra-terraform workflow. Uses Azure AD Workload Identity Federation
+# (OIDC) - no client secret is stored for the Web Apps deployment.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "mcp-server/**"
+      - "frontend/**"
+      - ".github/workflows/deploy-apps.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write # required for OIDC login to Azure
+  contents: read
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend API
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Sync dependencies (sanity check)
+        run: uv sync --frozen
+
+      - name: Zip package
+        run: zip -r ../backend.zip . -x ".venv/**"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.BACKEND_API_APP_NAME }}
+          package: backend.zip
+
+  deploy-mcp-server:
+    name: Deploy MCP Server
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: mcp-server
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Sync dependencies (sanity check)
+        run: uv sync --frozen
+
+      - name: Zip package
+        run: zip -r ../mcp-server.zip . -x ".venv/**"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.MCP_SERVER_APP_NAME }}
+          package: mcp-server.zip
+
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Generate environment.prod.ts
+        run: |
+          cat > src/environments/environment.prod.ts << 'EOF'
+          export const environment = {
+            production: true,
+            tenantId: '${{ secrets.TENANT_ID }}',
+            frontendClientId: '${{ secrets.FRONTEND_CLIENT_ID }}',
+            backendApiClientId: '${{ secrets.BACKEND_API_CLIENT_ID }}',
+            backendApiIdentifierUri: '${{ secrets.BACKEND_API_IDENTIFIER_URI }}',
+            backendApiUrl: '${{ secrets.BACKEND_API_URL_PROD }}',
+            redirectUri: '${{ secrets.FRONTEND_URL }}/',
+          };
+          EOF
+
+      - run: npm ci
+
+      - run: npm run build -- --configuration production
+
+      - name: Deploy to Azure Static Web App
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "frontend/dist/frontend/browser"
+          skip_app_build: true
+          output_location: ""

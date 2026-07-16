@@ -1,0 +1,9 @@
+export const environment = {
+  production: false,
+  tenantId: 'YOUR_TENANT_ID',
+  frontendClientId: 'YOUR_FRONTEND_CLIENT_ID',
+  backendApiClientId: 'YOUR_BACKEND_API_CLIENT_ID',
+  backendApiIdentifierUri: 'api://backend-api-<suffix>',
+  backendApiUrl: 'http://localhost:8000',
+  redirectUri: 'http://localhost:4200/',
+};

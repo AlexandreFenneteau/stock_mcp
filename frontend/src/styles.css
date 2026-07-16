@@ -1,0 +1,32 @@
+/* You can add global styles to this file, and also import other style files */
+
+:root {
+  --color-bg: #f3f5f9;
+  --color-surface: #ffffff;
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-danger: #e11d48;
+  --color-danger-hover: #be123c;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --shadow-card: 0 10px 30px -12px rgba(15, 23, 42, 0.15);
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(160deg, #eef1f8 0%, #e4e9f5 100%);
+  color: var(--color-text);
+}
+

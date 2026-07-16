@@ -1,0 +1,5 @@
+fast-agent.secrets.yaml
+.fast-agent/
+
+.venv
+fast-agent-log.jsonl

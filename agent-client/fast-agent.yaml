@@ -1,0 +1,22 @@
+# fast-agent configuration for the Stock Management demo.
+#
+# The MCP server is secured with Microsoft Entra ID OAuth (FastMCP AzureProvider,
+# OAuth Proxy pattern) - fast-agent's built-in OAuth support (auth.oauth: true)
+# handles the Authorization Code + PKCE flow automatically: on first connection
+# a login link is printed, and tokens are cached afterward (OS keychain by
+# default, see https://fast-agent.ai/mcp/mcp-oauth/).
+
+default_model: "responses.gpt-5.4-mini"
+
+mcp:
+  servers:
+    stock_mcp:
+      transport: sse
+      # Local dev URL below (used unless overridden). To point at the deployed
+      # MCP server without editing this file, set the environment variable
+      # MCP__SERVERS__STOCK_MCP__URL (fast-agent env var overrides take
+      # precedence over the config file), e.g.:
+      #   $env:MCP__SERVERS__STOCK_MCP__URL = "https://app-mcp-mcpstock-xxxxx.azurewebsites.net/sse"
+      url: "http://localhost:8001/sse"
+      auth:
+        oauth: true

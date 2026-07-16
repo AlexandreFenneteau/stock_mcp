@@ -1,0 +1,96 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-icon">📦</span>
+      <span class="brand-name">Gestion de stock</span>
+    </div>
+
+    <div class="auth-status" *ngIf="isLoggedIn(); else notLoggedIn">
+      <span class="status-dot status-dot--online"></span>
+      <span class="auth-label">
+        Connecté en tant que <strong>{{ activeAccountName }}</strong>
+      </span>
+      <button type="button" class="btn btn-ghost" (click)="logout()">Déconnexion</button>
+    </div>
+    <ng-template #notLoggedIn>
+      <div class="auth-status">
+        <span class="status-dot status-dot--offline"></span>
+        <span class="auth-label">Non connecté</span>
+        <button type="button" class="btn btn-primary" (click)="login()">Connexion</button>
+      </div>
+    </ng-template>
+  </div>
+</header>
+
+<main class="page">
+  <div class="empty-state" *ngIf="!isLoggedIn()">
+    <div class="empty-icon">🔒</div>
+    <h2>Connectez-vous pour accéder au stock</h2>
+    <p>Utilisez votre compte Entra ID pour consulter et gérer l'inventaire.</p>
+    <button type="button" class="btn btn-primary btn-lg" (click)="login()">Connexion</button>
+  </div>
+
+  <section class="card" *ngIf="isLoggedIn()">
+    <div class="card-header">
+      <h1>Inventaire</h1>
+      <button type="button" class="btn btn-outline" (click)="loadStock()" [disabled]="loading">
+        ↻ Actualiser
+      </button>
+    </div>
+
+    <p *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+
+    <div class="skeleton-list" *ngIf="loading">
+      <div class="skeleton-row" *ngFor="let n of [1, 2, 3]"></div>
+    </div>
+
+    <table class="stock-table" *ngIf="!loading && items.length">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom de l'article</th>
+          <th>Quantité en stock</th>
+          <th class="col-actions">Ajuster</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of items">
+          <td class="cell-id">#{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>
+            <span class="qty-badge" [class.qty-badge--low]="item.quantity === 0">
+              {{ item.quantity }}
+            </span>
+          </td>
+          <td class="col-actions">
+            <div class="qty-actions">
+              <button
+                type="button"
+                class="btn-round"
+                (click)="adjust(item, -1)"
+                [disabled]="pendingItemId === item.id || item.quantity === 0"
+                aria-label="Retirer une unité"
+              >
+                −
+              </button>
+              <button
+                type="button"
+                class="btn-round btn-round--primary"
+                (click)="adjust(item, 1)"
+                [disabled]="pendingItemId === item.id"
+                aria-label="Ajouter une unité"
+              >
+                +
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="empty-inline" *ngIf="!loading && !items.length && !errorMessage">
+      Aucun article en stock.
+    </p>
+  </section>
+</main>
+
