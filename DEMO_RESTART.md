@@ -87,10 +87,10 @@ terraform init -migrate-state  # Migrates to remote backend
 cd infra
 
 # Plan (automatically uses terraform.tfvars)
-terraform plan -out=demo.tfplan
+terraform plan -out="demo.tfplan"
 
 # Apply
-terraform apply demo.tfplan
+terraform apply "demo.tfplan"
 ```
 
 This creates:
