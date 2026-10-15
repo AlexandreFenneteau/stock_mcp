@@ -30,33 +30,7 @@ github_repository: AlexandreFenneteau@52283300/stock_mcp@1302728241
 admin_object_id: 12345678-1234-1234-1234-123456789012
 ```
 
-## Step 2: Create GitHub Variables & Secrets
-
-In your GitHub repo settings, set these **variables** (Settings → Variables):
-
-```
-GH_REPOSITORY_OIDC_SUBJECT=<your EMU OIDC subject from Step 1>
-ADMIN_OBJECT_ID=<your Azure object ID from Step 1>
-BACKEND_API_APP_NAME=app-backend-mcpstock-<random>
-MCP_SERVER_APP_NAME=app-mcp-mcpstock-<random>
-```
-
-Set these **secrets** (Settings → Secrets and variables → Secrets):
-
-```
-AZURE_CLIENT_ID=<GitHub-Actions-Deploy app registration client ID>
-AZURE_TENANT_ID=<your Azure tenant ID>
-AZURE_SUBSCRIPTION_ID=<your Azure subscription ID>
-TENANT_ID=<same as AZURE_TENANT_ID>
-FRONTEND_CLIENT_ID=<Frontend-Angular app registration client ID>
-BACKEND_API_CLIENT_ID=<Backend-API app registration app ID URI>
-BACKEND_API_IDENTIFIER_URI=api://<Backend-API app registration client ID>
-BACKEND_API_URL_PROD=https://<backend-app-name>.azurewebsites.net
-FRONTEND_URL=https://<static-web-app-url>
-AZURE_STATIC_WEB_APPS_API_TOKEN=<from Static Web App deployment credentials>
-```
-
-## Step 3: Configure Terraform Variables
+## Step 2: Configure Terraform Variables
 
 ```powershell
 cd infra
@@ -101,7 +75,48 @@ This creates:
 - ✅ Service Principal for GitHub Actions with OIDC federated credentials
 - ✅ Azure Storage for Terraform state
 
-## Step 5: Deploy Applications via GitHub Actions
+Capture the Terraform outputs for the next step:
+```powershell
+terraform output -json  # or individual outputs:
+terraform output azure_client_id
+terraform output azure_tenant_id
+terraform output azure_subscription_id
+terraform output backend_api_app_id_uri
+terraform output frontend_client_id
+terraform output mcp_client_secret
+terraform output backend_app_name
+terraform output mcp_server_app_name
+terraform output static_web_app_url
+```
+
+## Step 5: Create GitHub Variables & Secrets
+
+In your GitHub repo settings, set these **variables** (Settings → Variables):
+
+```
+GH_REPOSITORY_OIDC_SUBJECT=<your EMU OIDC subject from Step 1>
+ADMIN_OBJECT_ID=<your Azure object ID from Step 1>
+BACKEND_API_APP_NAME=<from terraform output backend_app_name>
+MCP_SERVER_APP_NAME=<from terraform output mcp_server_app_name>
+```
+
+Set these **secrets** (Settings → Secrets and variables → Secrets):
+
+```
+AZURE_CLIENT_ID=<from terraform output azure_client_id>
+AZURE_TENANT_ID=<from terraform output azure_tenant_id>
+AZURE_SUBSCRIPTION_ID=<from terraform output azure_subscription_id>
+TENANT_ID=<same as AZURE_TENANT_ID>
+FRONTEND_CLIENT_ID=<from terraform output frontend_client_id>
+BACKEND_API_CLIENT_ID=<from terraform output backend_api_app_id_uri>
+BACKEND_API_IDENTIFIER_URI=<from terraform output backend_api_app_id_uri>
+BACKEND_API_URL_PROD=https://<backend_app_name from terraform output>.azurewebsites.net
+FRONTEND_URL=https://<static_web_app_url from terraform output>
+AZURE_STATIC_WEB_APPS_API_TOKEN=<from Static Web App deployment credentials>
+MCP_CLIENT_SECRET=<from terraform output mcp_client_secret>
+```
+
+## Step 6: Deploy Applications via GitHub Actions
 
 Either:
 
@@ -119,7 +134,7 @@ Wait for all three jobs to complete:
 - ✅ Deploy MCP Server
 - ✅ Deploy Frontend
 
-## Step 6: Verify Deployment
+## Step 7: Verify Deployment
 
 ### Backend API
 ```powershell
@@ -139,7 +154,7 @@ Open `https://<static-web-app-url>` in a browser
 - ✅ After login, stock table displays
 - ✅ +1/-1 buttons work (calls backend API)
 
-## Step 7: Run Local Agent Client (Optional)
+## Step 8: Run Local Agent Client (Optional)
 
 ```powershell
 cd agent-client
@@ -161,7 +176,7 @@ The agent will:
 3. Connect to the deployed MCP server
 4. Execute inventory checks and modifications via LLM
 
-## Cleanup: Destroy Resources After Demo
+## Step 9: Cleanup (Destroy Resources After Demo)
 
 ```powershell
 cd infra
@@ -211,11 +226,12 @@ When restarting, ensure these files are committed:
 
 | Step | Duration |
 |------|----------|
-| GitHub Variables/Secrets setup | 5 min |
+| Configure Terraform Variables | 2 min |
 | Terraform init + plan | 2 min |
 | Terraform apply | 5-10 min |
+| GitHub Variables/Secrets setup | 5 min |
 | GitHub Actions deploy | 5-10 min |
 | Verification | 2-5 min |
-| **Total** | **20-30 min** |
+| **Total** | **20-35 min** |
 
 Use this guide the day before the demo to ensure everything is ready!

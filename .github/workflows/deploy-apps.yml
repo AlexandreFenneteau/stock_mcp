@@ -110,7 +110,7 @@ jobs:
             backendApiClientId: '${{ secrets.BACKEND_API_CLIENT_ID }}',
             backendApiIdentifierUri: '${{ secrets.BACKEND_API_IDENTIFIER_URI }}',
             backendApiUrl: '${{ secrets.BACKEND_API_URL_PROD }}',
-            redirectUri: '${{ secrets.FRONTEND_URL }}/',
+            redirectUri: '${{ secrets.FRONTEND_URL }}',
           };
           EOF
 
