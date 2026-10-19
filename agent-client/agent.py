@@ -6,6 +6,8 @@ authenticating via Entra ID OAuth (Authorization Code + PKCE, handled
 automatically by fast-agent - see fast-agent.yaml).
 """
 
+from mcp.types import TextResourceContents
+import json
 import asyncio
 
 from fast_agent import FastAgent
@@ -24,6 +26,12 @@ fast = FastAgent("Stock Management Agent")
 async def main():
     # use the --model command line switch or agent arguments to change model
     async with fast.run() as agent:
+        resource_uri = "resource://api_backend_url"
+        resource = await agent.get_resource(
+            resource_uri,
+            "stock_mcp",
+        )
+        print(f"Client app can access to resource:\n\t{resource.contents[0].uri} =\n\t\t{json.loads(resource.contents[0].text)}\nbut agent can't directly")
         await agent.interactive()
 
 
