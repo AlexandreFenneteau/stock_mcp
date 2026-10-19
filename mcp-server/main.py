@@ -14,6 +14,7 @@ Backend-API calls are made "on behalf of" the signed-in user via the
 On-Behalf-Of (OBO) flow, using FastMCP's EntraOBOToken dependency.
 """
 
+import json
 from typing import Optional
 import os
 
@@ -142,6 +143,9 @@ def display_in_table(bold_item_id: int) -> str:
 @mcp.resource("resource://api_backend_url")
 def get_backend_url() -> str:
     """Provide the backend url used for storage management"""
+    return json.dumps({
+        "api_url": BACKEND_API_URL
+    })
 
 if __name__ == "__main__":
     mcp.run(
