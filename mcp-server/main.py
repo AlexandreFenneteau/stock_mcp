@@ -14,6 +14,7 @@ Backend-API calls are made "on behalf of" the signed-in user via the
 On-Behalf-Of (OBO) flow, using FastMCP's EntraOBOToken dependency.
 """
 
+from typing import Optional
 import os
 
 import dotenv
@@ -131,6 +132,16 @@ async def modify_inventory(
     item = response.json()
     return f"Item #{item['id']} ({item['name']}) new quantity: {item['quantity']}."
 
+
+@mcp.prompt()
+def display_in_table(bold_item_id: int) -> str:
+    """Generate a user message asking for markdown table display in bold_item_id in bold."""
+    return f"Can you please give me the inventory using `check_inventory` mcp tool and format it as a markdown table with item with id = {bold_item_id} in **bold**?"
+
+
+@mcp.resource("resource://api_backend_url")
+def get_backend_url() -> str:
+    """Provide the backend url used for storage management"""
 
 if __name__ == "__main__":
     mcp.run(
